@@ -68,7 +68,7 @@ class TouchlineSLSensor(TouchlineSLZoneEntity, SensorEntity):
         zone_id: int,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize airgradient sensor."""
+        """Initialize touchline sensor."""
         super().__init__(coordinator, zone_id)
         self.entity_description = description
         self._attr_unique_id = f"module-{self.coordinator.data.module.id}-zone-{self.zone_id}-{description.key}"
