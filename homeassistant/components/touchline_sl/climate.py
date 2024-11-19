@@ -2,22 +2,19 @@
 
 from typing import Any
 
-from pytouchlinesl import Zone
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TouchlineSLConfigEntry
-from .const import DOMAIN
 from .coordinator import TouchlineSLModuleCoordinator
+from .entity import TouchlineSLZoneEntity
 
 
 async def async_setup_entry(
@@ -37,10 +34,10 @@ async def async_setup_entry(
 CONSTANT_TEMPERATURE = "constant_temperature"
 
 
-class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEntity):
+class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
     """Roth Touchline SL Zone."""
 
-    _attr_has_entity_name = True
+    _attr_hvac_action = HVACAction.IDLE
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_name = None
@@ -49,23 +46,15 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "zone"
+    # _attr_extra_state_attributes = None
 
     def __init__(self, coordinator: TouchlineSLModuleCoordinator, zone_id: int) -> None:
         """Construct a Touchline SL climate zone."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, zone_id)
         self.zone_id: int = zone_id
 
         self._attr_unique_id = (
             f"module-{self.coordinator.data.module.id}-zone-{self.zone_id}"
-        )
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(zone_id))},
-            name=self.zone.name,
-            manufacturer="Roth",
-            via_device=(DOMAIN, coordinator.data.module.id),
-            model="zone",
-            suggested_area=self.zone.name,
         )
 
         # Call this in __init__ so data is populated right away, since it's
@@ -77,11 +66,6 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         """Handle updated data from the coordinator."""
         self.set_attr()
         super()._handle_coordinator_update()
-
-    @property
-    def zone(self) -> Zone:
-        """Return the device object from the coordinator data."""
-        return self.coordinator.data.zones[self.zone_id]
 
     @property
     def available(self) -> bool:
@@ -118,6 +102,19 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         self._attr_target_temperature = self.zone.target_temperature
         self._attr_current_humidity = int(self.zone.humidity)
         self._attr_preset_modes = [*schedule_names, CONSTANT_TEMPERATURE]
+
+        if self.zone.algorithm == "heating":
+            self._attr_hvac_action = (
+                HVACAction.HEATING if self.zone.relay_on else HVACAction.IDLE
+            )
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_hvac_modes = [HVACMode.HEAT]
+        elif self.zone.algorithm == "cooling":
+            self._attr_hvac_action = (
+                HVACAction.COOLING if self.zone.relay_on else HVACAction.IDLE
+            )
+            self._attr_hvac_mode = HVACMode.COOL
+            self._attr_hvac_modes = [HVACMode.COOL]
 
         if self.zone.mode == "constantTemp":
             self._attr_preset_mode = CONSTANT_TEMPERATURE
