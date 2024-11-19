@@ -28,6 +28,8 @@ class TouchlineSLMeasurementSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Zone], StateType]
 
 
+ALARM_STATUS_LIST: list[str] = ["clear", "no_connection", "sensor_damaged"]
+
 MEASUREMENT_SENSOR_TYPES: tuple[TouchlineSLMeasurementSensorEntityDescription, ...] = (
     TouchlineSLMeasurementSensorEntityDescription(
         key="battery_percent",
@@ -37,6 +39,22 @@ MEASUREMENT_SENSOR_TYPES: tuple[TouchlineSLMeasurementSensorEntityDescription, .
         device_class=SensorDeviceClass.BATTERY,
         translation_key="battery",
         value_fn=lambda status: status.battery_level,
+    ),
+    TouchlineSLMeasurementSensorEntityDescription(
+        key="signal_strength",
+        translation_key="signal_strength",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda status: status.signal_strength,
+    ),
+    TouchlineSLMeasurementSensorEntityDescription(
+        key="alarm",
+        translation_key="alarm",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=ALARM_STATUS_LIST,
+        value_fn=lambda status: status.alarm if status.alarm else "clear",
     ),
 )
 
