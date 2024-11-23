@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 from .coordinator import TouchlineSLModuleCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 type TouchlineSLConfigEntry = ConfigEntry[list[TouchlineSLModuleCoordinator]]
 

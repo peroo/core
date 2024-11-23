@@ -31,6 +31,22 @@
           }
         }
       }
+    },
+    "sensor": {
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "clear": "Clear",
+          "no_connection": "No Connection",
+          "sensor_damaged": "Sensor Damaged"
+        }
+      }
     }
   }
 }
